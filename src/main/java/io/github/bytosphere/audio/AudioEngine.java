@@ -12,7 +12,16 @@ import java.util.Optional;
  * <p>
  * Usage pattern:
  * <pre>{@code
- * AudioEngine engine = new AudioEngine(AudioFormat.canonical());
+ * // Create a configuration with default settings
+ * AudioEngineConfiguration config = AudioEngineConfiguration.builder().build();
+ *
+ * // Or with custom settings
+ * AudioEngineConfiguration config = AudioEngineConfiguration.builder()
+ *     .audioFormat(new AudioFormat(16000, 1, 16))
+ *     .chunkSize(4096)
+ *     .build();
+ *
+ * AudioEngine engine = new AudioEngine(config);
  *
  * // Feed audio frames to the engine
  * engine.consume(new AudioFrame(audioData));
@@ -27,27 +36,29 @@ import java.util.Optional;
  * @see AudioFormat
  * @see AudioFrame
  * @see AudioChunk
+ * @see AudioEngineConfiguration
  */
 public class AudioEngine {
+
+    private final AudioFormat audioFormat;
 
     /**
      * The size of each audio chunk in bytes.
      * This is the amount of audio data required to produce one chunk.
      */
-    private final int CHUNK_SIZE_BYTES = 4096;
-
-    private final AudioFormat audioFormat;
+    private final int chunkSize;
 
     private final ByteBuffer buffer;
 
     /**
-     * Creates a new AudioEngine with the specified format.
+     * Creates a new AudioEngine with the specified configuration.
      *
-     * @param audioFormat the format of the audio to process
+     * @param configuration the audio engine configuration containing format and chunk size
      */
-    public AudioEngine(AudioFormat audioFormat) {
-        this.audioFormat = audioFormat;
-        this.buffer = ByteBuffer.allocateDirect(CHUNK_SIZE_BYTES * audioFormat.channels());
+    public AudioEngine(AudioEngineConfiguration configuration) {
+        this.audioFormat = configuration.getAudioFormat();
+        this.chunkSize = configuration.getChunkSize();
+        this.buffer = ByteBuffer.allocateDirect(chunkSize * audioFormat.channels());
     }
 
     /**
@@ -74,7 +85,7 @@ public class AudioEngine {
     /**
      * Produces an audio chunk if there is enough data in the buffer.
      * <p>
-     * This method checks if the buffer contains at least CHUNK_SIZE_BYTES of data.
+     * This method checks if the buffer contains at least the configured chunk size of data.
      * If so, it creates an AudioChunk and returns it wrapped in an Optional.
      * If not, it returns an empty Optional.
      * <p>
@@ -85,8 +96,8 @@ public class AudioEngine {
      *         or an empty Optional if more data needs to be accumulated
      */
     public Optional<AudioChunk> produce() {
-        if (buffer.position() >= CHUNK_SIZE_BYTES) {
-            AudioChunk chunk = new AudioChunk(CHUNK_SIZE_BYTES);
+        if (buffer.position() >= chunkSize) {
+            AudioChunk chunk = new AudioChunk(chunkSize);
             buffer.flip();
             buffer.get(chunk.getData());
             buffer.compact();

@@ -18,12 +18,12 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TranscriptProviderTest {
 
     private MockWebSocketClient mockWebSocketClient;
-    private DefaultTranscriptProvider transcriptProvider;
+    private MockTranscriptProvider transcriptProvider;
 
     @BeforeEach
     void setUp() {
         mockWebSocketClient = new MockWebSocketClient();
-        transcriptProvider = new DefaultTranscriptProvider(mockWebSocketClient);
+        transcriptProvider = new MockTranscriptProvider(mockWebSocketClient);
     }
 
     @Test
@@ -227,8 +227,8 @@ public class TranscriptProviderTest {
         MockWebSocketClient mockClient1 = new MockWebSocketClient();
         MockWebSocketClient mockClient2 = new MockWebSocketClient();
 
-        DefaultTranscriptProvider provider1 = new DefaultTranscriptProvider(mockClient1);
-        DefaultTranscriptProvider provider2 = new DefaultTranscriptProvider(mockClient2);
+        MockTranscriptProvider provider1 = new MockTranscriptProvider(mockClient1);
+        MockTranscriptProvider provider2 = new MockTranscriptProvider(mockClient2);
 
         TranscriptionSession session1 = provider1.listen(uri1, session1Transcripts::add);
         TranscriptionSession session2 = provider2.listen(uri2, session2Transcripts::add);
