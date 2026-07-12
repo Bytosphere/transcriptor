@@ -31,10 +31,18 @@ public class DefaultWebSocketClient implements WebSocketClient {
 
     private WebSocket webSocket;
 
+    /**
+     * Creates a new DefaultWebSocketClient with the default connect timeout of 10 seconds.
+     */
     public DefaultWebSocketClient() {
         this(Duration.ofSeconds(10));
     }
 
+    /**
+     * Creates a new DefaultWebSocketClient with the specified connect timeout.
+     *
+     * @param connectTimeout the maximum time to wait for the connection to be established
+     */
     public DefaultWebSocketClient(Duration connectTimeout) {
         this.connectTimeout = connectTimeout;
         this.httpClient = HttpClient.newBuilder()
@@ -48,30 +56,45 @@ public class DefaultWebSocketClient implements WebSocketClient {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DefaultWebSocketClient onText(Consumer<String> handler) {
         this.onText = handler;
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DefaultWebSocketClient onBinary(Consumer<ByteBuffer> handler) {
         this.onBinary = handler;
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DefaultWebSocketClient onClose(BiConsumer<Integer, String> handler) {
         this.onClose = handler;
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DefaultWebSocketClient onError(Consumer<Throwable> handler) {
         this.onError = handler;
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CompletableFuture<WebSocketClient> connect(String url) {
         return httpClient.newWebSocketBuilder()
@@ -101,11 +124,17 @@ public class DefaultWebSocketClient implements WebSocketClient {
         return webSocket.sendBinary(data, true);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CompletableFuture<WebSocket> close() {
         return close(WebSocket.NORMAL_CLOSURE, "client closing");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CompletableFuture<WebSocket> close(int statusCode, String reason) {
         if (webSocket != null && !webSocket.isOutputClosed()) {
@@ -114,11 +143,19 @@ public class DefaultWebSocketClient implements WebSocketClient {
         return CompletableFuture.completedFuture(webSocket);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isConnected() {
         return webSocket != null && !webSocket.isOutputClosed();
     }
 
+    /**
+     * Ensures that the WebSocket is connected before performing operations.
+     *
+     * @throws IllegalStateException if the WebSocket is not connected
+     */
     private void requireConnected() {
         if (webSocket == null) {
             throw new IllegalStateException("WebSocketClient is not connected — call connect() first");
