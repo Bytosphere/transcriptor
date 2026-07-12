@@ -22,7 +22,15 @@ public class AudioEngine {
 
     /** Consumes an audio frame and prepares it for transmission. */
     public void consume(AudioFrame audioFrame) {
-        buffer.put(audioFrame.data());
+        byte[] data = audioFrame.data();
+        int remaining = buffer.remaining();
+
+        if (data.length <= remaining) {
+            buffer.put(data);
+        } else {
+            // Only write what fits, ignore excess
+            buffer.put(data, 0, remaining);
+        }
     }
 
     /** Produces an audio chunk if there is enough data in the buffer. */

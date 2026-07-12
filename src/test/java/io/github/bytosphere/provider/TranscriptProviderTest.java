@@ -15,10 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for `TranscriptProvider`.
- * Uses DefaultTranscriptProvider with a mocked WebSocketClient to test the `TranscriptProvider` functionality.
- */
 public class TranscriptProviderTest {
 
     private MockWebSocketClient mockWebSocketClient;
