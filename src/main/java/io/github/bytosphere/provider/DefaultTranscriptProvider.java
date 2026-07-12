@@ -2,6 +2,7 @@ package io.github.bytosphere.provider;
 
 import io.github.bytosphere.core.TranscriptListener;
 import io.github.bytosphere.core.TranscriptionSession;
+import io.github.bytosphere.net.WebSocketClient;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -12,6 +13,10 @@ public class DefaultTranscriptProvider extends WebSocketTranscriptProvider<Strin
 
     public DefaultTranscriptProvider() {
         super();
+    }
+
+    public DefaultTranscriptProvider(WebSocketClient client) {
+        super(client);
     }
 
     public TranscriptionSession listen(URI url, TranscriptListener<String> listener) {
@@ -51,8 +56,16 @@ public class DefaultTranscriptProvider extends WebSocketTranscriptProvider<Strin
     protected void onBinaryMessage(ByteBuffer message) { }
 
     @Override
-    protected void onClose(int statusCode, String reason) { }
+    protected void onClose(int statusCode, String reason) {
+        if (listener != null) {
+            listener.onClose();
+        }
+    }
 
     @Override
-    protected void onError(Throwable error) { }
+    protected void onError(Throwable error) {
+        if (listener != null) {
+            listener.onError(error);
+        }
+    }
 }
