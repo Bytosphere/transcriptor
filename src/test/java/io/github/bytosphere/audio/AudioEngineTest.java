@@ -14,15 +14,16 @@ public class AudioEngineTest {
 
     @BeforeEach
     void setUp() {
-        AudioFormat audioFormat = AudioFormat.canonical(); // 16,000 Hz, 1 channel, 16 bit
-        audioEngine = new AudioEngine(audioFormat);
+        AudioEngineConfiguration config = AudioEngineConfiguration.builder().build();
+        audioEngine = new AudioEngine(config);
     }
 
     @Test
-    @DisplayName("Test creating AudioEngine with default format")
+    @DisplayName("Test creating AudioEngine with default configuration")
     void testCreateAudioEngineWithDefaultFormat() {
         // Act
-        AudioEngine engine = new AudioEngine(AudioFormat.canonical());
+        AudioEngineConfiguration config = AudioEngineConfiguration.builder().build();
+        AudioEngine engine = new AudioEngine(config);
 
         // Assert
         assertNotNull(engine);
@@ -34,9 +35,12 @@ public class AudioEngineTest {
     void testCreateAudioEngineWithStereoFormat() {
         // Arrange
         AudioFormat stereoFormat = new AudioFormat(44100, 2, 16);
+        AudioEngineConfiguration config = AudioEngineConfiguration.builder()
+            .audioFormat(stereoFormat)
+            .build();
 
         // Act
-        AudioEngine engine = new AudioEngine(stereoFormat);
+        AudioEngine engine = new AudioEngine(config);
 
         // Assert
         assertNotNull(engine);
@@ -246,7 +250,10 @@ public class AudioEngineTest {
     void testBufferSizeWithDifferentChannelConfigurations() {
         // Arrange - stereo format (2 channels)
         AudioFormat stereoFormat = new AudioFormat(44100, 2, 16);
-        AudioEngine stereoEngine = new AudioEngine(stereoFormat);
+        AudioEngineConfiguration config = AudioEngineConfiguration.builder()
+            .audioFormat(stereoFormat)
+            .build();
+        AudioEngine stereoEngine = new AudioEngine(config);
 
         // The buffer size should be CHUNK_SIZE_BYTES * channels = 4096 * 2 = 8192
         // But the CHUNK_SIZE_BYTES is hardcoded to 4096, not multiplied by channels
