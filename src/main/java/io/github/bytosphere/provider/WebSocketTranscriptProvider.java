@@ -4,7 +4,6 @@ import io.github.bytosphere.net.DefaultWebSocketClient;
 import io.github.bytosphere.net.WebSocketClient;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.CompletableFuture;
 
 /** An abstract class for transcript providers that use WebSockets. */
 public abstract class WebSocketTranscriptProvider<T> implements TranscriptProvider<T> {
@@ -22,7 +21,11 @@ public abstract class WebSocketTranscriptProvider<T> implements TranscriptProvid
 
     /** Creates a new WebSocket transcript provider using the specified client implementation. */
     public WebSocketTranscriptProvider(WebSocketClient client) {
-        this.client = client;
+        this.client = client
+            .onText(this::onMessage)
+            .onBinary(this::onBinaryMessage)
+            .onClose(this::onClose)
+            .onError(this::onError);
     }
 
     public final WebSocketClient getClient() {
