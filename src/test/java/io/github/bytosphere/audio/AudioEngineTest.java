@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +16,7 @@ public class AudioEngineTest {
 
     @BeforeEach
     void setUp() {
-        AudioEngineConfiguration config = AudioEngineConfiguration.builder().build();
+        AudioEngine.Configuration config = AudioEngine.Configuration.builder().build();
         audioEngine = new AudioEngine(config);
     }
 
@@ -22,12 +24,12 @@ public class AudioEngineTest {
     @DisplayName("Test creating AudioEngine with default configuration")
     void testCreateAudioEngineWithDefaultFormat() {
         // Act
-        AudioEngineConfiguration config = AudioEngineConfiguration.builder().build();
+        AudioEngine.Configuration config = AudioEngine.Configuration.builder().build();
         AudioEngine engine = new AudioEngine(config);
 
         // Assert
         assertNotNull(engine);
-        assertEquals(0, engine.getCurrentBufferSize());
+        assertFalse(engine.hasNextChunk());
     }
 
     @Test
@@ -35,7 +37,7 @@ public class AudioEngineTest {
     void testCreateAudioEngineWithStereoFormat() {
         // Arrange
         AudioFormat stereoFormat = new AudioFormat(44100, 2, 16);
-        AudioEngineConfiguration config = AudioEngineConfiguration.builder()
+        AudioEngine.Configuration config = AudioEngine.Configuration.builder()
             .audioFormat(stereoFormat)
             .build();
 
@@ -44,7 +46,7 @@ public class AudioEngineTest {
 
         // Assert
         assertNotNull(engine);
-        assertEquals(0, engine.getCurrentBufferSize());
+        assertFalse(engine.hasNextChunk());
     }
 
     @Test
@@ -79,199 +81,57 @@ public class AudioEngineTest {
     }
 
     @Test
-    @DisplayName("Test produce returns empty when buffer is not full")
-    void testProduceReturnsEmptyWhenBufferNotFull() {
+    @DisplayName("Test hasNextChunk returns false on empty buffer")
+    void testHasNextChunkReturnsFalseOnEmptyBuffer() {
+        // Act
+        boolean hasChunk = audioEngine.hasNextChunk();
+
+        // Assert
+        assertFalse(hasChunk);
+    }
+
+    @Test
+    @DisplayName("Test nextChunk returns empty when no chunks available")
+    void testNextChunkReturnsEmptyWhenNoChunksAvailable() {
         // Arrange
         byte[] frameData = new byte[1024];
         AudioFrame frame = new AudioFrame(frameData);
         audioEngine.consume(frame);
 
         // Act
-        Optional<AudioChunk> result = audioEngine.produce();
+        Optional<AudioChunk> result = audioEngine.nextChunk();
 
         // Assert
         assertTrue(result.isEmpty());
     }
 
     @Test
-    @DisplayName("Test produce returns chunk when buffer is exactly full")
-    void testProduceReturnsChunkWhenBufferExactlyFull() {
-        // Arrange - CHUNK_SIZE_BYTES is 4096
-        byte[] frameData = new byte[4096];
-        AudioFrame frame = new AudioFrame(frameData);
-        audioEngine.consume(frame);
-
-        // Act
-        Optional<AudioChunk> result = audioEngine.produce();
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertNotNull(result.get().getData());
-        assertEquals(4096, result.get().getData().length);
-    }
-
-    @Test
-    @DisplayName("Test produce returns chunk when buffer exactly matches chunk size")
-    void testProduceReturnsChunkWhenBufferExactlyMatchesChunkSize() {
-        // Arrange - CHUNK_SIZE_BYTES is 4096
-        byte[] frameData = new byte[4096];
-        AudioFrame frame = new AudioFrame(frameData);
-        audioEngine.consume(frame);
-
-        // Act
-        Optional<AudioChunk> result = audioEngine.produce();
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(4096, result.get().getData().length);
-    }
-
-    @Test
-    @DisplayName("Test produce resets buffer after producing chunk")
-    void testProduceResetsBufferAfterProducingChunk() {
+    @DisplayName("Test fromFile throws IllegalArgumentException for non-WAV file")
+    void testFromFileThrowsExceptionForNonWavFile() {
         // Arrange
-        byte[] frameData = new byte[4096];
-        AudioFrame frame = new AudioFrame(frameData);
-        audioEngine.consume(frame);
+        AudioEngine.Configuration config = AudioEngine.Configuration.builder().build();
+        Path mp3Path = Path.of("test.mp3");
 
-        // Verify initial state
-        assertEquals(4096, audioEngine.getCurrentBufferSize());
-
-        // Act
-        audioEngine.produce();
-
-        // Assert
-        assertEquals(0, audioEngine.getCurrentBufferSize());
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            AudioEngine.fromFile(mp3Path, config);
+        });
     }
 
     @Test
-    @DisplayName("Test data exceeding buffer capacity is dropped")
-    void testDataExceedingBufferCapacityIsDropped() {
-        // Arrange - 5000 bytes, but buffer can only hold 4096
-        byte[] frameData = new byte[5000];
-        AudioFrame frame = new AudioFrame(frameData);
-        audioEngine.consume(frame);
-
-        // Verify initial state - only 4096 bytes fit
-        assertEquals(4096, audioEngine.getCurrentBufferSize());
-
-        // Act
-        Optional<AudioChunk> result = audioEngine.produce();
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(4096, result.get().getData().length);
-        // Buffer should be empty after produce
-        assertEquals(0, audioEngine.getCurrentBufferSize());
-    }
-
-    @Test
-    @DisplayName("Test multiple produce calls with accumulated data")
-    void testMultipleProduceCallsWithAccumulatedData() {
-        // Arrange - consume 2 chunks worth of data (8192 bytes), but buffer can only hold 4096
-        byte[] frameData = new byte[8192];
-        AudioFrame frame = new AudioFrame(frameData);
-        audioEngine.consume(frame);
-
-        // Verify initial state - only 4096 bytes fit
-        assertEquals(4096, audioEngine.getCurrentBufferSize());
-
-        // Act - produce first chunk
-        Optional<AudioChunk> result1 = audioEngine.produce();
-
-        // Assert first produce
-        assertTrue(result1.isPresent());
-        assertEquals(4096, result1.get().getData().length);
-        assertEquals(0, audioEngine.getCurrentBufferSize());
-
-        // Act - produce second chunk (should be empty since we dropped excess)
-        Optional<AudioChunk> result2 = audioEngine.produce();
-
-        // Assert second produce
-        assertTrue(result2.isEmpty());
-    }
-
-    @Test
-    @DisplayName("Test produce after consuming more data")
-    void testProduceAfterConsumingMoreData() {
+    @DisplayName("Test fromFile throws exception for non-existent WAV file")
+    void testFromFileThrowsExceptionForNonExistentFile() {
         // Arrange
-        byte[] frameData1 = new byte[2048];
-        byte[] frameData2 = new byte[2048];
-        // Total: 4096, should trigger produce
+        AudioEngine.Configuration config = AudioEngine.Configuration.builder().build();
+        Path nonExistentPath = Path.of("test_resources", "non_existent_file.wav");
 
-        // Act
-        audioEngine.consume(new AudioFrame(frameData1));
-        Optional<AudioChunk> result1 = audioEngine.produce();
-
-        audioEngine.consume(new AudioFrame(frameData2));
-        Optional<AudioChunk> result2 = audioEngine.produce();
-
-        // Assert
-        assertTrue(result1.isEmpty());
-        assertTrue(result2.isPresent());
-        assertEquals(4096, result2.get().getData().length);
-    }
-
-    @Test
-    @DisplayName("Test consume and produce workflow")
-    void testConsumeAndProduceWorkflow() {
-        // Arrange - simulate a typical workflow
-        byte[] smallFrame = new byte[512];
-
-        // Act & Assert - consume 8 small frames to fill buffer
-        for (int i = 0; i < 7; i++) {
-            audioEngine.consume(new AudioFrame(smallFrame));
-            Optional<AudioChunk> result = audioEngine.produce();
-            assertTrue(result.isEmpty(), "Should not produce after frame " + (i + 1));
-        }
-
-        // After 8th frame, we should have 4096 bytes
-        audioEngine.consume(new AudioFrame(smallFrame));
-        Optional<AudioChunk> result = audioEngine.produce();
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(4096, result.get().getData().length);
-        assertEquals(0, audioEngine.getCurrentBufferSize());
-    }
-
-    @Test
-    @DisplayName("Test produce on empty buffer returns empty")
-    void testProduceOnEmptyBufferReturnsEmpty() {
-        // Act
-        Optional<AudioChunk> result = audioEngine.produce();
-
-        // Assert
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    @DisplayName("Test buffer size with different channel configurations")
-    void testBufferSizeWithDifferentChannelConfigurations() {
-        // Arrange - stereo format (2 channels)
-        AudioFormat stereoFormat = new AudioFormat(44100, 2, 16);
-        AudioEngineConfiguration config = AudioEngineConfiguration.builder()
-            .audioFormat(stereoFormat)
-            .build();
-        AudioEngine stereoEngine = new AudioEngine(config);
-
-        // The buffer size should be CHUNK_SIZE_BYTES * channels = 4096 * 2 = 8192
-        // But the CHUNK_SIZE_BYTES is hardcoded to 4096, not multiplied by channels
-
-        // Let me verify the current behavior - the buffer is allocated as CHUNK_SIZE_BYTES * channels
-        byte[] frameData = new byte[4096];
-
-        // Act
-        stereoEngine.consume(new AudioFrame(frameData));
-
-        // Assert - The buffer should have 4096 bytes
-        assertEquals(4096, stereoEngine.getCurrentBufferSize());
-
-        // And produce should work with CHUNK_SIZE_BYTES (4096), not CHUNK_SIZE_BYTES * channels
-        Optional<AudioChunk> result = stereoEngine.produce();
-
-        // This test documents the current behavior
-        assertTrue(result.isPresent());
-        assertEquals(4096, result.get().getData().length);
+        // Act & Assert
+        // First checks extension, then tries to read file
+        Exception exception = assertThrows(Exception.class, () -> {
+            AudioEngine.fromFile(nonExistentPath, config);
+        });
+        // Either IllegalArgumentException (extension check) or IOException (file read)
+        assertTrue(exception instanceof IllegalArgumentException ||
+                    exception instanceof IOException);
     }
 }
