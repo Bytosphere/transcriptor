@@ -6,9 +6,9 @@ package io.github.bytosphere.core;
 public interface TranscriptionSession extends AutoCloseable {
 
     /**
-     * Disconnects the current session.
+     * A user-requested cancellation of the transcription session.
      */
-    void disconnect();
+    void cancel();
 
     /**
      * Returns whether the session is active.
@@ -17,6 +17,6 @@ public interface TranscriptionSession extends AutoCloseable {
 
     @Override
     default void close() {
-        disconnect();
+        cancel();
     }
 }
