@@ -45,7 +45,7 @@ public class MockTranscriptProvider extends WebSocketTranscriptProvider<String> 
         this.listener = listener;
         return new TranscriptionSession() {
 
-            public void disconnect() {
+            public void cancel() {
                 getClient().close().thenAccept((ws) -> { });
             }
 
@@ -55,7 +55,7 @@ public class MockTranscriptProvider extends WebSocketTranscriptProvider<String> 
 
             @Override
             public void close() {
-                disconnect();
+                cancel();
             }
         };
     }
