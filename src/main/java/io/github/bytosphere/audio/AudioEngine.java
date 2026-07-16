@@ -169,7 +169,7 @@ public class AudioEngine {
      * leaving any remaining data for the next chunk.
      */
     private void produce() {
-        if (buffer.position() >= chunkSize)
+        if (buffer.position() < chunkSize)
             return;
         AudioChunk chunk = new AudioChunk(chunkSize);
         buffer.flip();
