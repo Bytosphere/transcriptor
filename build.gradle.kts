@@ -1,12 +1,19 @@
 plugins {
-    id("java")
+    `java-library`
 }
 
 group = "io.github.bytosphere"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+    withJavadocJar()
 }
 
 dependencies {
@@ -19,4 +26,16 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.jar {
+    archiveFileName.set("transcriptor-v${version}.jar")
+    manifest {
+        attributes(
+            "Implementation-Title" to "Transcriptor",
+            "Implementation-Version" to version,
+            "Implementation-Vendor" to "Bytosphere",
+            "License" to "MIT"
+        )
+    }
 }
