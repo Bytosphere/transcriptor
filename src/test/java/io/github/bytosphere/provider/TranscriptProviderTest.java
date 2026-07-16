@@ -2,7 +2,8 @@ package io.github.bytosphere.provider;
 
 import io.github.bytosphere.core.TranscriptListener;
 import io.github.bytosphere.core.TranscriptionSession;
-import io.github.bytosphere.net.MockWebSocketClient;
+import io.github.bytosphere.mock.MockTranscriptProvider;
+import io.github.bytosphere.mock.MockWebSocketClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ public class TranscriptProviderTest {
             }
 
             @Override
-            public void onClose() {
+            public void onClose(int statusCode, String reason) {
             }
         });
 
@@ -84,7 +85,7 @@ public class TranscriptProviderTest {
             }
 
             @Override
-            public void onClose() {
+            public void onClose(int statusCode, String reason) {
             }
         });
 
@@ -116,7 +117,7 @@ public class TranscriptProviderTest {
             }
 
             @Override
-            public void onClose() {
+            public void onClose(int statusCode, String reason) {
                 closeReceived.set(true);
                 closeCount.incrementAndGet();
             }
@@ -149,7 +150,7 @@ public class TranscriptProviderTest {
             }
 
             @Override
-            public void onClose() {
+            public void onClose(int statusCode, String reason) {
             }
         });
 
@@ -175,7 +176,7 @@ public class TranscriptProviderTest {
             }
 
             @Override
-            public void onClose() {
+            public void onClose(int statusCode, String reason) {
             }
         });
 
@@ -268,7 +269,7 @@ public class TranscriptProviderTest {
             }
 
             @Override
-            public void onClose() {
+            public void onClose(int statusCode, String reason) {
                 closed.set(true);
             }
         });
