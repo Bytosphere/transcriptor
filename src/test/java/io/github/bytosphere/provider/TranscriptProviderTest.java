@@ -127,7 +127,7 @@ public class TranscriptProviderTest {
         mockWebSocketClient.connect(uri.toString());
         assertTrue(mockWebSocketClient.isConnected());
 
-        session.cancel();
+        session.close();
 
         // Assert
         assertFalse(mockWebSocketClient.isConnected());
@@ -184,7 +184,7 @@ public class TranscriptProviderTest {
         mockWebSocketClient.connect(uri.toString());
         assertTrue(session.isActive());
 
-        session.cancel();
+        session.close();
 
         // Assert
         assertFalse(session.isActive());

@@ -69,32 +69,12 @@ public class WebSocketTranscriptionSessionTest {
     }
 
     @Test
-    @DisplayName("cancel closes connection with normal closure")
-    void testCancelClosesConnectionWithNormalClosure() {
-        session.cancel();
-
-        assertEquals(WebSocket.NORMAL_CLOSURE, mockConnection.lastCloseStatusCode);
-        assertEquals("", mockConnection.lastCloseReason);
-    }
-
-    @Test
-    @DisplayName("close closes connection with normal closure and null reason")
-    void testCloseClosesConnectionWithNormalClosureAndNullReason() {
+    @DisplayName("close closes connection with normal closure and empty reason")
+    void testCloseClosesConnectionWithNormalClosureAndEmptyReason() {
         session.close();
 
         assertEquals(WebSocket.NORMAL_CLOSURE, mockConnection.lastCloseStatusCode);
-        assertNull(mockConnection.lastCloseReason);
-    }
-
-    @Test
-    @DisplayName("cancel makes session inactive")
-    void testCancelMakesSessionInactive() {
-        mockConnection.connected = true;
-        assertTrue(session.isActive());
-
-        session.cancel();
-
-        assertFalse(session.isActive());
+        assertEquals("", mockConnection.lastCloseReason);
     }
 
     @Test

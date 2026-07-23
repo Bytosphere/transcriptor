@@ -118,22 +118,17 @@ public class MockTranscriptProvider implements TranscriptProvider<String> {
         return new TranscriptionSession() {
 
             @Override
-            public void cancel() {
-                if (listener != null && mockClient != null) {
-                    mockClient.simulateClose(1000, "Cancelled by client");
-                } else if (listener != null) {
-                    listener.onClose(1000, "Cancelled by client");
-                }
-            }
-
-            @Override
             public boolean isActive() {
                 return listener != null && (mockClient == null || mockClient.isConnected());
             }
 
             @Override
             public void close() {
-                cancel();
+                if (listener != null && mockClient != null) {
+                    mockClient.simulateClose(1000, "Closed by client");
+                } else if (listener != null) {
+                    listener.onClose(1000, "Closed by client");
+                }
             }
         };
     }

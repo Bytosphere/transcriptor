@@ -1,6 +1,7 @@
 package io.github.bytosphere.core;
 
 import io.github.bytosphere.net.WebSocketConnection;
+import lombok.NonNull;
 
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
@@ -13,7 +14,7 @@ import java.nio.ByteBuffer;
  * data over WebSocket. It handles both text and binary message transmission.
  * <p>
  * The session is considered active while the underlying WebSocket connection is connected.
- * Use {@link #cancel()} or {@link #close()} to terminate the session.
+ * Use {@link #close()} to terminate the session.
  *
  * @see TranscriptionSession
  * @see io.github.bytosphere.net.WebSocketConnection
@@ -65,18 +66,6 @@ public class WebSocketTranscriptionSession implements TranscriptionSession {
     }
 
     /**
-     * Cancels the transcription session.
-     * <p>
-     * This sends a normal closure close frame to the server and
-     * terminates the session. The session is considered inactive after
-     * this call, even if the underlying connection hasn't fully closed yet.
-     */
-    @Override
-    public void cancel() {
-        connection.close(WebSocket.NORMAL_CLOSURE, "");
-    }
-
-    /**
      * Checks if this session is currently active.
      *
      * @return true if the underlying WebSocket connection is open, false otherwise
@@ -87,12 +76,20 @@ public class WebSocketTranscriptionSession implements TranscriptionSession {
     }
 
     /**
+     * Closes the WebSocket connection with a custom status code and reason.
+     *
+     * @param statusCode the WebSocket close status code
+     * @param reason the reason for closing
+     */
+    public void close(int statusCode, @NonNull String reason) {
+        connection.close(statusCode, reason);
+    }
+
+    /**
      * Closes the transcription session.
-     * <p>
-     * This is equivalent to calling {@link #cancel()}.
      */
     @Override
     public void close() {
-        connection.close(WebSocket.NORMAL_CLOSURE, null);
+        connection.close(WebSocket.NORMAL_CLOSURE, "");
     }
 }
