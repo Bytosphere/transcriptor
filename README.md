@@ -24,14 +24,14 @@ Download the JAR from the [releases](https://github.com/bytosphere/transcriptor/
 <dependency>
     <groupId>io.github.bytosphere</groupId>
     <artifactId>transcriptor</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </xml>
 ```
 
 ### Gradle (Kotlin)
 
 ```kotlin
-implementation("io.github.bytosphere:transcriptor:1.0.0")
+implementation("io.github.bytosphere:transcriptor:1.0.1")
 ```
 
 ## Quickstart
