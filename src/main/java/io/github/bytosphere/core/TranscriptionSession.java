@@ -6,17 +6,18 @@ package io.github.bytosphere.core;
 public interface TranscriptionSession extends AutoCloseable {
 
     /**
-     * A user-requested cancellation of the transcription session.
-     */
-    void cancel();
-
-    /**
      * Returns whether the session is active.
      */
     boolean isActive();
 
+    /**
+     * Closes this transcription session and releases any resources.
+     * <p>
+     * This is a default implementation that does nothing.
+     * Implementations should override this method to perform cleanup.
+     */
     @Override
     default void close() {
-        cancel();
+        // Default implementation, no-op.
     }
 }
